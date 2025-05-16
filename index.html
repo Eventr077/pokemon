@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Simple Productivity Hub</title>
+		<style>
+			:root {
+				--primary: #4361ee;
+				--primary-light: #4895ef;
+				--dark: #3a0ca3;
+				--secondary: #f72585;
+				--success: #4cc9f0;
+				--warning: #f8961e;
+				--danger: #ef476f;
+				--gray: #ced4da;
+				--dark-gray: #6c757d;
+				--break-color: #7209b7;
+			}
+
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+				font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+			}
+
+			body {
+				background-color: #f3f4f6;
+				color: #333;
+				padding: 20px;
+			}
+
+			header {
+				background-color: var(--primary);
+				color: white;
+				padding: 1rem;
+				border-radius: 8px;
+				margin-bottom: 20px;
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+
+			.container {
+				max-width: 800px;
+				margin: 0 auto;
+			}
+
+			.card {
+				background-color: white;
+				border-radius: 8px;
+				box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+				padding: 1.5rem;
+				margin-bottom: 1rem;
+			}
+
+			.card-title {
+				font-size: 1.25rem;
+				font-weight: bold;
+				margin-bottom: 1rem;
+				color: var(--dark);
+				display: flex;
+				justify-content: space-between;
+				align-items: center;
+			}
+
+			.btn {
+				padding: 0.5rem 1rem;
+				border: none;
+				border-radius: 4px;
+				cursor: pointer;
+				font-weight: 500;
+				transition: all 0.2s;
+			}
+
+			.btn-primary {
+				background-color: var(--primary);
+				color: white;
+			}
+
+			.btn-primary:hover {
+				background-color: var(--primary-light);
+			}
+
+			.btn-danger {
+				background-color: var(--danger);
+				color: white;
+			}
+
+			.btn-warning {
+				background-color: var(--warning);
+				color: white;
+			}
+
+			.btn-sm {
+				padding: 0.25rem 0.5rem;
+				font-size: 0.875rem;
+			}
+
+			input,
+			textarea,
+			select {
+				padding: 0.5rem;
+				border: 1px solid var(--gray);
+				border-radius: 4px;
+				width: 100%;
+				margin-bottom: 1rem;
+			}
+
+			.form-group {
+				margin-bottom: 1rem;
+			}
+
+			.todo-list {
+				list-style: none;
+			}
+
+			.todo-item {
+				display: flex;
+				align-items: center;
+				padding: 0.75rem 0;
+				border-bottom: 1px solid var(--gray);
+			}
+
+			.todo-checkbox {
+				margin-right: 0.75rem;
+				width: 18px;
+				height: 18px;
+			}
+
+			.todo-text {
+				flex-grow: 1;
+			}
+
+			.todo-completed .todo-text {
+				text-decoration: line-through;
+				color: var(--dark-gray);
+			}
+
+			.priority-high {
+				border-left: 3px solid var(--danger);
+				padding-left: 0.5rem;
+			}
+
+			.priority-medium {
+				border-left: 3px solid var(--warning);
+				padding-left: 0.5rem;
+			}
+
+			.priority-low {
+				border-left: 3px solid var(--success);
+				padding-left: 0.5rem;
+			}
+
+			.hidden {
+				display: none;
+			}
+
+			.flex {
+				display: flex;
+			}
+
+			.space-between {
+				justify-content: space-between;
+			}
+
+			.gap-2 {
+				gap: 0.5rem;
+			}
+
+			.timer-display {
+				font-size: 2.5rem;
+				font-weight: bold;
+				text-align: center;
+				margin: 1rem 0;
+			}
+
+			.timer-mode {
+				text-align: center;
+				font-size: 1.25rem;
+				margin-bottom: 1rem;
+				padding: 0.5rem;
+				border-radius: 4px;
+				font-weight: bold;
+			}
+
+			.timer-work {
+				background-color: #e6f2ff;
+				color: var(--primary);
+			}
+
+			.timer-break {
+				background-color: #f5e6ff;
+				color: var(--break-color);
+			}
+
+			.timer-controls {
+				display: flex;
+				justify-content: center;
+				gap: 0.5rem;
+				margin-bottom: 1rem;
+			}
+
+			.notification {
+				position: fixed;
+				bottom: 20px;
+				right: 20px;
+				padding: 10px 20px;
+				background-color: var(--primary);
+				color: white;
+				border-radius: 4px;
+				box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+				z-index: 1001;
+				transition: all 0.3s;
+				opacity: 0;
+				transform: translateY(20px);
+			}
+
+			.notification.show {
+				opacity: 1;
+				transform: translateY(0);
+			}
+
+			.notification.error {
+				background-color: var(--danger);
+			}
+
+			/* Estilos para la lista de notas */
+			.notes-list {
+				margin-top: 1rem;
+			}
+
+			.note-item {
+				background-color: #f8f9fa;
+				padding: 0.75rem;
+				border-radius: 4px;
+				margin-bottom: 0.5rem;
+				border-left: 3px solid var(--primary);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container">
+			<header>
+				<div class="app-title">Simple Productivity Hub</div>
+				<div id="currentDate"></div>
+			</header>
+
+			<div class="card">
+				<div class="card-title">
+					<span>My Tasks</span>
+					<button class="btn btn-primary btn-sm" id="addTaskBtn">
+						Add Task
+					</button>
+				</div>
+				<div class="form-group hidden" id="taskForm">
+					<input
+						type="text"
+						id="taskInput"
+						placeholder="What needs to be done?" />
+					<div class="flex space-between gap-2">
+						<select id="taskPriority">
+							<option value="low">Low Priority</option>
+							<option value="medium">Medium Priority</option>
+							<option value="high">High Priority</option>
+						</select>
+						<button class="btn btn-primary" id="saveTaskBtn">
+							Save
+						</button>
+					</div>
+				</div>
+				<ul class="todo-list" id="todoList">
+					<!-- Tasks will be populated here -->
+				</ul>
+			</div>
+
+			<div class="card">
+				<div class="card-title">Quick Notes</div>
+				<textarea
+					id="quickNotes"
+					placeholder="Jot down your thoughts here..."
+					rows="4"></textarea>
+				<button class="btn btn-primary btn-sm" id="saveNotesBtn">
+					Save Notes
+				</button>
+				<div class="notes-list" id="notesList">
+					<!-- Saved notes will be displayed here -->
+				</div>
+			</div>
+
+			<div class="card">
+				<div class="card-title">Pomodoro Timer</div>
+				<div class="timer-mode timer-work" id="timerMode">
+					WORK SESSION
+				</div>
+				<div class="timer-display" id="timerDisplay">25:00</div>
+				<div class="timer-controls">
+					<button class="btn btn-primary" id="startTimerBtn">
+						Start
+					</button>
+					<button class="btn btn-primary" id="pauseTimerBtn" disabled>
+						Pause
+					</button>
+					<button class="btn btn-danger" id="resetTimerBtn">
+						Reset
+					</button>
+					<button class="btn btn-warning" id="skipTimerBtn">
+						Skip
+					</button>
+				</div>
+				<div
+					id="sessionCount"
+					style="text-align: center; margin-top: 10px">
+					Sessions completed: 0
+				</div>
+			</div>
+		</div>
+
+		<div class="notification" id="notification"></div>
+
+		<script>
+			let timerRunning = false;
+			let timeLeft = 25 * 60; // 25 minutes in seconds
+			let isWorkSession = true;
+			let sessionCounter = 0;
+			const WORK_TIME = 25 * 60; // 25 minutes in seconds
+			const BREAK_TIME = 5 * 60; // 5 minutes in seconds
+
+			document.addEventListener("DOMContentLoaded", function () {
+				// Initialize the app
+				updateDateTime();
+				loadTasks();
+				loadNotes();
+				renderNotes();
+				updateSessionDisplay();
+
+				// Update date and time
+				setInterval(updateDateTime, 60000);
+
+				// Task management
+				const addTaskBtn = document.getElementById("addTaskBtn");
+				const taskForm = document.getElementById("taskForm");
+				const saveTaskBtn = document.getElementById("saveTaskBtn");
+
+				addTaskBtn.addEventListener("click", function () {
+					taskForm.classList.toggle("hidden");
+					document.getElementById("taskInput").focus();
+				});
+
+				saveTaskBtn.addEventListener("click", saveTask);
+
+				// Notes management
+				const saveNotesBtn = document.getElementById("saveNotesBtn");
+				saveNotesBtn.addEventListener("click", function () {
+					const quickNotes = document.getElementById("quickNotes");
+					const noteText = quickNotes.value.trim();
+
+					if (noteText === "") {
+						showNotification("Please enter a note!", true);
+						return;
+					}
+
+					// Get existing notes or create empty array
+					const notes = JSON.parse(
+						localStorage.getItem("savedNotes") || "[]"
+					);
+
+					// Add new note with timestamp
+					notes.push({
+						text: noteText,
+						timestamp: new Date().toISOString(),
+					});
+
+					// Save notes to localStorage
+					localStorage.setItem("savedNotes", JSON.stringify(notes));
+
+					// Save the current note to quickNotes (for backward compatibility)
+					localStorage.setItem("quickNotes", quickNotes.value);
+
+					// Clear the text area
+					quickNotes.value = "";
+
+					// Update the notes display
+					renderNotes();
+
+					showNotification("Note saved successfully!");
+				});
+
+				// Pomodoro timer
+				const startTimerBtn = document.getElementById("startTimerBtn");
+				const pauseTimerBtn = document.getElementById("pauseTimerBtn");
+				const resetTimerBtn = document.getElementById("resetTimerBtn");
+				const skipTimerBtn = document.getElementById("skipTimerBtn");
+
+				let timer;
+				timerRunning = false;
+
+				startTimerBtn.addEventListener("click", startTimer);
+				pauseTimerBtn.addEventListener("click", pauseTimer);
+				resetTimerBtn.addEventListener("click", resetTimer);
+				skipTimerBtn.addEventListener("click", skipTimer);
+
+				// Initialize timer mode display
+				updateTimerModeDisplay();
+			});
+
+			// Update date and time
+			function updateDateTime() {
+				const now = new Date();
+				const options = {
+					weekday: "long",
+					month: "long",
+					day: "numeric",
+				};
+				document.getElementById("currentDate").textContent =
+					now.toLocaleDateString("en-US", options);
+			}
+
+			// Task Management Functions
+			function saveTask() {
+				const taskInput = document.getElementById("taskInput");
+				const taskPriority = document.getElementById("taskPriority");
+
+				if (taskInput.value.trim() === "") {
+					showNotification("Please enter a task!", true);
+					return;
+				}
+
+				const task = {
+					id: Date.now(),
+					text: taskInput.value.trim(),
+					completed: false,
+					priority: taskPriority.value,
+					createdAt: new Date().toISOString(),
+				};
+
+				const tasks = getTasks();
+				tasks.push(task);
+				localStorage.setItem("tasks", JSON.stringify(tasks));
+
+				taskInput.value = "";
+				taskPriority.value = "low";
+
+				document.getElementById("taskForm").classList.add("hidden");
+				loadTasks();
+				showNotification("Task added successfully!");
+			}
+
+			function getTasks() {
+				return JSON.parse(localStorage.getItem("tasks") || "[]");
+			}
+
+			function loadTasks() {
+				const todoList = document.getElementById("todoList");
+				const tasks = getTasks();
+
+				todoList.innerHTML = "";
+
+				if (tasks.length === 0) {
+					todoList.innerHTML =
+						"<p>No tasks yet. Add a task to get started!</p>";
+					return;
+				}
+
+				// Sort tasks: incomplete first, then by priority
+				tasks.sort((a, b) => {
+					if (a.completed !== b.completed)
+						return a.completed ? 1 : -1;
+
+					const priorityOrder = { high: 1, medium: 2, low: 3 };
+					if (priorityOrder[a.priority] !== priorityOrder[b.priority])
+						return (
+							priorityOrder[a.priority] -
+							priorityOrder[b.priority]
+						);
+
+					return new Date(b.createdAt) - new Date(a.createdAt);
+				});
+
+				tasks.forEach((task) => {
+					const li = document.createElement("li");
+					li.className = `todo-item priority-${task.priority} ${
+						task.completed ? "todo-completed" : ""
+					}`;
+
+					li.innerHTML = `
+          <input type="checkbox" class="todo-checkbox" data-id="${task.id}" ${
+						task.completed ? "checked" : ""
+					}>
+          <span class="todo-text">${task.text}</span>
+          <button class="btn btn-danger btn-sm" data-id="${task.id}">×</button>
+        `;
+
+					todoList.appendChild(li);
+
+					// Add event listeners
+					li.querySelector(".todo-checkbox").addEventListener(
+						"change",
+						toggleTaskCompletion
+					);
+					li.querySelector(".btn-danger").addEventListener(
+						"click",
+						deleteTask
+					);
+				});
+			}
+
+			function toggleTaskCompletion(e) {
+				const taskId = parseInt(e.target.dataset.id);
+				const tasks = getTasks();
+				const taskIndex = tasks.findIndex((task) => task.id === taskId);
+
+				if (taskIndex !== -1) {
+					tasks[taskIndex].completed = !tasks[taskIndex].completed;
+					localStorage.setItem("tasks", JSON.stringify(tasks));
+					loadTasks();
+				}
+			}
+
+			function deleteTask(e) {
+				const taskId = parseInt(e.target.dataset.id);
+				const tasks = getTasks();
+				const filteredTasks = tasks.filter(
+					(task) => task.id !== taskId
+				);
+
+				localStorage.setItem("tasks", JSON.stringify(filteredTasks));
+				loadTasks();
+				showNotification("Task deleted!");
+			}
+
+			// Notes Management Functions
+			function loadNotes() {
+				const quickNotes = document.getElementById("quickNotes");
+				const savedNotes = localStorage.getItem("quickNotes");
+
+				if (savedNotes) {
+					quickNotes.value = savedNotes;
+				}
+			}
+
+			function renderNotes() {
+				const notesContainer = document.getElementById("notesList");
+				const notes = JSON.parse(
+					localStorage.getItem("savedNotes") || "[]"
+				);
+
+				notesContainer.innerHTML = "";
+
+				if (notes.length === 0) {
+					notesContainer.innerHTML = "<p>No saved notes yet.</p>";
+					return;
+				}
+
+				// Sort notes by timestamp, newest first
+				notes.sort(
+					(a, b) => new Date(b.timestamp) - new Date(a.timestamp)
+				);
+
+				notes.forEach((note, index) => {
+					const noteElement = document.createElement("div");
+					noteElement.className = "note-item";
+
+					// Format date if available
+					let dateStr = "";
+					if (note.timestamp) {
+						const noteDate = new Date(note.timestamp);
+						dateStr = `<small>${noteDate.toLocaleDateString()} ${noteDate.toLocaleTimeString(
+							[],
+							{ hour: "2-digit", minute: "2-digit" }
+						)}</small><br>`;
+					}
+
+					// Display note with timestamp and delete button
+					noteElement.innerHTML = `
+                        ${dateStr}
+                        ${note.text}
+                        <button class="btn btn-danger btn-sm" style="float: right;" data-index="${index}">×</button>
+                    `;
+
+					notesContainer.appendChild(noteElement);
+
+					// Add delete event listener
+					noteElement
+						.querySelector(".btn-danger")
+						.addEventListener("click", function () {
+							deleteNote(index);
+						});
+				});
+			}
+
+			function deleteNote(index) {
+				const notes = JSON.parse(
+					localStorage.getItem("savedNotes") || "[]"
+				);
+				notes.splice(index, 1);
+				localStorage.setItem("savedNotes", JSON.stringify(notes));
+				renderNotes();
+				showNotification("Note deleted!");
+			}
+
+			// Pomodoro Timer Functions
+			function updateTimerModeDisplay() {
+				const timerModeElement = document.getElementById("timerMode");
+
+				if (isWorkSession) {
+					timerModeElement.textContent = "WORK SESSION";
+					timerModeElement.className = "timer-mode timer-work";
+				} else {
+					timerModeElement.textContent = "BREAK SESSION";
+					timerModeElement.className = "timer-mode timer-break";
+				}
+			}
+
+			function toggleTimerMode() {
+				isWorkSession = !isWorkSession;
+
+				if (isWorkSession) {
+					timeLeft = WORK_TIME;
+				} else {
+					timeLeft = BREAK_TIME;
+					sessionCounter++;
+					updateSessionDisplay();
+				}
+
+				updateTimerDisplay();
+				updateTimerModeDisplay();
+			}
+
+			function updateSessionDisplay() {
+				document.getElementById(
+					"sessionCount"
+				).textContent = Sessions completed: ${sessionCounter};
+			}
+
+			function startTimer() {
+				if (timerRunning) return;
+
+				timerRunning = true;
+				startTimerBtn.disabled = true;
+				pauseTimerBtn.disabled = false;
+
+				timer = setInterval(function () {
+					timeLeft--;
+					updateTimerDisplay();
+
+					if (timeLeft <= 0) {
+						clearInterval(timer);
+						timerRunning = false;
+
+						// Toggle between work and break sessions
+						toggleTimerMode();
+
+						// Update UI
+						startTimerBtn.disabled = false;
+						pauseTimerBtn.disabled = true;
+
+						if (isWorkSession) {
+							showNotification(
+								"Break time is over! Back to work."
+							);
+						} else {
+							showNotification(
+								"Work session completed! Take a break."
+							);
+						}
+
+						playAlertSound();
+					}
+				}, 1000);
+			}
+
+			function pauseTimer() {
+				clearInterval(timer);
+				timerRunning = false;
+				startTimerBtn.disabled = false;
+				pauseTimerBtn.disabled = true;
+			}
+
+			function resetTimer() {
+				clearInterval(timer);
+				timerRunning = false;
+
+				// Reset to work session
+				isWorkSession = true;
+				timeLeft = WORK_TIME;
+
+				updateTimerDisplay();
+				updateTimerModeDisplay();
+
+				startTimerBtn.disabled = false;
+				pauseTimerBtn.disabled = true;
+
+				showNotification("Timer reset to work session.");
+			}
+
+			function skipTimer() {
+				clearInterval(timer);
+				timerRunning = false;
+
+				// Toggle between work and break
+				toggleTimerMode();
+
+				// Update UI
+				updateTimerDisplay();
+				startTimerBtn.disabled = false;
+				pauseTimerBtn.disabled = true;
+
+				if (isWorkSession) {
+					showNotification("Skipped to work session!");
+				} else {
+					showNotification("Skipped to break session!");
+				}
+			}
+
+			function updateTimerDisplay() {
+				const minutes = Math.floor(timeLeft / 60);
+				const seconds = timeLeft % 60;
+				document.getElementById("timerDisplay").textContent = `${minutes
+					.toString()
+					.padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+			}
+
+			function playAlertSound() {
+				const audio = new Audio(
+					"data:audio/mp3;base64,SUQzBAAAAAAAI1RTU0UAAAAPAAADTGF2ZjU4Ljc2LjEwMAAAAAAAAAAAAAAA/+M4wAAAAAAAAAAAAEluZm8AAAAPAAAAAwAAAbAAkJCQkJCQkJCQkJCQkJCQwMDAwMDAwMDAwMDAwMDAwODg4ODg4ODg4ODg4ODg4OD///////////////////////////////////////////////8AAAAATGF2YzU4LjEzAAAAAAAAAAAAAAAAJAYKAAAAAAAAAbD2z92bAAAAAAAAAAAAAAAAAAAA/+MYxAAAAANIAAAAAExBTUUzLjEwMFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV/+MYxDsAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV/+MYxHYAAANIAAAAAFVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVVV"
+				);
+				audio.play();
+			}
+
+			// Notification system
+			function showNotification(message, isError = false) {
+				const notification = document.getElementById("notification");
+				notification.textContent = message;
+				notification.className =
+					"notification show" + (isError ? " error" : "");
+
+				setTimeout(() => {
+					notification.className = "notification";
+				}, 3000);
+			}
+		</script>
+	</body>
+</html>
